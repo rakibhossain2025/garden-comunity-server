@@ -21,11 +21,15 @@ async function run() {
     await client.connect();
 
     const gardenDataCollections = client.db("gardenTips").collection('tips')
+    const activeGardeners = client.db("gardenTips").collection("activeGardeners")
 
 
-    app.get('/', (req, res) => {
-      console.log(res.send("iam here"))
+    app.get('/activegardeners', async (req, res) => {
+      const query = { isActive: true }
+      const result = await activeGardeners.find(query).limit(6).toArray()
+      res.send(result)
     })
+    
     app.post('/tips', async (req, res) => {
       const tip = req.body;
       const result = await gardenDataCollections.insertOne(tip)
