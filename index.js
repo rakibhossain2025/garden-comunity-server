@@ -29,7 +29,11 @@ async function run() {
       const result = await activeGardeners.find(query).limit(6).toArray()
       res.send(result)
     })
-    
+
+    app.get('/tips', async (req, res) => {
+      res.send(await gardenDataCollections.find().toArray())
+    })
+
     app.post('/tips', async (req, res) => {
       const tip = req.body;
       const result = await gardenDataCollections.insertOne(tip)
