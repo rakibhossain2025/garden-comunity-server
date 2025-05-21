@@ -21,8 +21,15 @@ async function run() {
     await client.connect();
 
     const gardenDataCollections = client.db("gardenTips").collection('tips')
+
     const activeGardeners = client.db("gardenTips").collection("activeGardeners")
 
+    const UserCollections = client.db("gardenTips").collection("users")
+    app.post("/users", async (req, res) => {
+      const user = res.body;
+      const result = await UserCollections.insertOne(user)
+      res.send(result)
+    })
 
     app.get('/activegardeners', async (req, res) => {
       const query = { isActive: true }
@@ -31,7 +38,10 @@ async function run() {
     })
 
     app.get('/tips', async (req, res) => {
-      res.send(await gardenDataCollections.find().toArray())
+      res.send(await gardenDataCollections.find({ status: true }).toArray())
+    })
+    app.get('/tips', async (req, res) => {
+      res.send(await gardenDataCollections.find({ status: true }).toArray())
     })
 
     app.post('/tips', async (req, res) => {
