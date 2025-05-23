@@ -52,9 +52,8 @@ async function run() {
       res.send(activeGardener);
     });
 
-
     // get data from db 
-    app.get('/tips', async (req, res) => {
+    app.get('/tips/email/:email', async (req, res) => {
 
       const email = req.params.email
       if (email) {
@@ -63,6 +62,28 @@ async function run() {
       } else {
         res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
       }
+    })
+
+    // get all data from db 
+    app.get('/tips', async (req, res) => {
+      res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
+    })
+
+    //get tip by id for update
+    app.get('/tips/id/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await gardenDataCollections.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    //  tip  update 
+    app.put('/tips/id/:id', async (req, res) => {
+      const id = req.params.id
+      const filter = { _id: new ObjectId(id) }
+      const updateTip = req.body
+      const Tip = { $set: updateTip }
+      const result = await gardenDataCollections.updateOne(filter, Tip)
+      res.send(result)
     })
 
     // post in db 
