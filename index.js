@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const express = require("express");
 const app = express();
@@ -18,40 +18,45 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
-    await client.connect();
 
     const gardenDataCollections = client.db("gardenTips").collection('tips')
 
     const activeGardeners = client.db("gardenTips").collection("activeGardeners")
 
     const UserCollections = client.db("gardenTips").collection("users")
+
+    // user add 
     app.post("/users", async (req, res) => {
-      const user = res.body;
+      const user = req.body;
       const result = await UserCollections.insertOne(user)
       res.send(result)
     })
 
-    app.get('/activegardeners', async (req, res) => {
-      const query = { isActive: true }
-      const result = await activeGardeners.find(query).limit(6).toArray()
-      res.send(result)
+    //  get all data from db 
+    app.get('/active-gardeners', async (req, res) => {
+      const result = await activeGardeners.find({ availability: "Public" }).limit(6).toArray();
+      res.send(result);
+    });
+    app.get('/active-gardeners/:id', async (req, res) => {
+      const id = req.params
+      const query = { _id: new ObjectId(id), availability: "Public" }
+      const activeGardener = await activeGardeners.findOne(query);
+      res.send(activeGardener);
+    });
+
+
+    // get data from db 
+    app.get('/tips', async (req, res) => {
+      res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
     })
 
-    app.get('/tips', async (req, res) => {
-      res.send(await gardenDataCollections.find({ status: true }).toArray())
-    })
-    app.get('/tips', async (req, res) => {
-      res.send(await gardenDataCollections.find({ status: true }).toArray())
-    })
-
+    // post in db 
     app.post('/tips', async (req, res) => {
       const tip = req.body;
       const result = await gardenDataCollections.insertOne(tip)
       res.send(result)
     })
 
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally { }
 }
 run().catch(console.dir);
