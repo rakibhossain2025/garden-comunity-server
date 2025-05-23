@@ -27,6 +27,7 @@ async function run() {
 
     // user add 
     app.post("/users", async (req, res) => {
+      //* need change for duplicate update it later
       const user = req.body;
       const result = await UserCollections.insertOne(user)
       res.send(result)
@@ -34,9 +35,16 @@ async function run() {
 
     //  get all data from db 
     app.get('/active-gardeners', async (req, res) => {
+      const result = await activeGardeners.find().toArray();
+      res.send(result);
+    });
+
+    // get public  from db 
+    app.get('/active-gardeners', async (req, res) => {
       const result = await activeGardeners.find({ availability: "Public" }).limit(6).toArray();
       res.send(result);
     });
+
     app.get('/active-gardeners/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id), availability: "Public" }
@@ -47,7 +55,14 @@ async function run() {
 
     // get data from db 
     app.get('/tips', async (req, res) => {
-      res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
+
+      const email = req.params.email
+      if (email) {
+        const result = await gardenDataCollections.find({ UserEmail: email }).toArray()
+        res.send(result)
+      } else {
+        res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
+      }
     })
 
     // post in db 
