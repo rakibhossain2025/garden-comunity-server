@@ -27,9 +27,17 @@ async function run() {
 
     // user add 
     app.post("/users", async (req, res) => {
-      //* need change for duplicate update it later
       const user = req.body;
+      console.log(user)
+      const ifAlready = await UserCollections.findOne({ email: user.email })
+      if (ifAlready) return res.status(409).send({ message: "User already exists" })
       const result = await UserCollections.insertOne(user)
+      res.send(result)
+    })
+    // get user 
+    app.get("/users/email/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await UserCollections.find({ email: email }).toArray()
       res.send(result)
     })
 
