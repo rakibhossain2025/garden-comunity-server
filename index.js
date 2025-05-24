@@ -39,12 +39,6 @@ async function run() {
       res.send(result);
     });
 
-    // get public  from db 
-    app.get('/active-gardeners', async (req, res) => {
-      const result = await activeGardeners.find({ availability: "Public" }).limit(6).toArray();
-      res.send(result);
-    });
-
     app.get('/active-gardeners/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id), availability: "Public" }
@@ -86,12 +80,34 @@ async function run() {
       res.send(result)
     })
 
+    // liked function 
+    app.put("/activeGardeners/like/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const filter = { _id: new ObjectId(id) };
+      const update = { $inc: { totalLiked: 1 } };
+      const result = await activeGardeners.updateOne(filter, update);
+      res.send(result);
+    });
+
     // post in db 
     app.post('/tips', async (req, res) => {
       const tip = req.body;
       const result = await gardenDataCollections.insertOne(tip)
       res.send(result)
     })
+
+
+    app.delete('/tips/:id', async (req, res) => {
+      const id = req.params.id
+
+      const query = { _id: new ObjectId(id) }
+      const result = await gardenDataCollections.deleteOne(query)
+      res.send(result)
+
+
+    })
+
 
   } finally { }
 }
