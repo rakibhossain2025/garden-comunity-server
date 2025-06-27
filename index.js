@@ -19,10 +19,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
-    const gardenDataCollections = client.db("gardenTips").collection('tips')
-
     const activeGardeners = client.db("gardenTips").collection("activeGardeners")
-
     const UserCollections = client.db("gardenTips").collection("users")
 
     // user add 
@@ -46,7 +43,30 @@ async function run() {
       const result = await activeGardeners.find().toArray();
       res.send(result);
     });
+    //  get active data from db 
+    app.get('/active-gardener', async (req, res) => {
+      const result = await activeGardeners.find({status:true}).limit(6).toArray();
+      res.send(result);
+    });
 
+    //get user data
+    app.get('/user', async (req, res) => {
+      try {
+        const email = req.query.email
+        if (!email) {
+          res.status(401).send({ message: 'not email Found' })
+          return
+        }
+        res.send(await activeGardeners.find({ UserEmail: email }).toArray())
+      } finally { }
+    })
+
+    app.get('/tip/:id', async (req, res) => {
+      const id = req.params
+      const query = { _id: new ObjectId(id), availability: "Public" }
+      const activeGardeners = await activeGardeners.findOne(query);
+      res.send(activeGardeners);
+    });
     app.get('/active-gardeners/:id', async (req, res) => {
       const id = req.params
       const query = { _id: new ObjectId(id), availability: "Public" }
@@ -59,22 +79,18 @@ async function run() {
 
       const email = req.params.email
       if (email) {
-        const result = await gardenDataCollections.find({ UserEmail: email }).toArray()
+        const result = await activeGardeners.find({ UserEmail: email }).toArray()
         res.send(result)
       } else {
-        res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
+        res.send(await activeGardeners.find({ availability: "Public" }).toArray())
       }
-    })
-
-    // get all data from db 
-    app.get('/tips', async (req, res) => {
-      res.send(await gardenDataCollections.find({ availability: "Public" }).toArray())
     })
 
     //get tip by id for update
     app.get('/tips/id/:id', async (req, res) => {
       const id = req.params.id;
-      const result = await gardenDataCollections.findOne({ _id: new ObjectId(id) });
+      console.log(id)
+      const result = await activeGardeners.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
 
@@ -84,7 +100,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) }
       const updateTip = req.body
       const Tip = { $set: updateTip }
-      const result = await gardenDataCollections.updateOne(filter, Tip)
+      const result = await activeGardeners.updateOne(filter, Tip)
       res.send(result)
     })
 
@@ -99,9 +115,9 @@ async function run() {
     });
 
     // post in db 
-    app.post('/tips', async (req, res) => {
+    app.post('/tip', async (req, res) => {
       const tip = req.body;
-      const result = await gardenDataCollections.insertOne(tip)
+      const result = await activeGardeners.insertOne(tip)
       res.send(result)
     })
 
@@ -110,7 +126,7 @@ async function run() {
       const id = req.params.id
 
       const query = { _id: new ObjectId(id) }
-      const result = await gardenDataCollections.deleteOne(query)
+      const result = await activeGardeners.deleteOne(query)
       res.send(result)
 
 
@@ -120,7 +136,9 @@ async function run() {
   } finally { }
 }
 run().catch(console.dir);
-
+app.get('/', async (rakib, res) => {
+  res.send('Iam rak!b')
+})
 app.listen(port, () => {
   console.log(`backend server is running on port is ${port}`)
 })
